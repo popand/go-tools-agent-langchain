@@ -94,10 +94,6 @@ func main() {
 	// Create the agent
 	toolsAgent := agent.NewToolsAgent(agentConfig, client, mem, parser)
 
-	// Create a context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
 	// Example input that uses multiple tools
 	input := `Can you help me with these tasks:
 1. Calculate 15 divided by 3 and multiply the result by 4
@@ -105,6 +101,10 @@ func main() {
 3. Make an HTTP GET request to https://api.github.com/repos/golang/go
 4. Write and execute a Python script that prints "Hello from Python!"
 `
+
+	// Create a context with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
 
 	// Execute the agent
 	response, err := toolsAgent.Execute(ctx, input)
