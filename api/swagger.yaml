@@ -1,0 +1,177 @@
+openapi: 3.0.0
+info:
+  title: Go Tools Agent API
+  description: |
+    A powerful, extensible Go-based agent framework that combines OpenAI's GPT-4 capabilities with practical tools for real-world tasks.
+    The API provides access to various tools including calculator, HTTP requests, Wikipedia searches, and code execution.
+  version: 1.0.0
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+paths:
+  /execute:
+    post:
+      summary: Execute agent operations
+      description: |
+        Executes one or more operations using the available tools. Operations can include:
+        * Mathematical calculations
+        * HTTP requests
+        * Wikipedia searches
+        * Python code execution
+      operationId: executeOperation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExecuteRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExecuteResponse'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '405':
+          description: Method not allowed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ExecuteRequest:
+      type: object
+      required:
+        - input
+      properties:
+        input:
+          type: string
+          description: The instruction or query to execute
+          example: "Calculate 15 divided by 3 and multiply the result by 4"
+        debug:
+          type: boolean
+          description: When true, includes detailed execution logs in the response
+          default: false
+
+    ExecuteResponse:
+      type: object
+      required:
+        - result
+      properties:
+        result:
+          type: object
+          required:
+            - final_output
+          properties:
+            final_output:
+              type: object
+              required:
+                - response
+                - confidence
+              properties:
+                response:
+                  type: string
+                  description: The formatted text response from the agent
+                confidence:
+                  type: number
+                  format: float
+                  minimum: 0
+                  maximum: 1
+                  description: |
+                    Confidence score of the response:
+                    * 1.0: High confidence, all tools executed successfully
+                    * 0.8-0.99: Good confidence, most tools executed successfully with minor issues
+                    * 0.5-0.79: Medium confidence, some tools had execution issues
+                    * < 0.5: Low confidence, significant issues during execution
+            steps:
+              type: array
+              description: Array of intermediate steps showing tool executions
+              items:
+                $ref: '#/components/schemas/ExecutionStep'
+        error:
+          type: string
+          description: Error message if the execution failed
+        debug:
+          type: array
+          description: Detailed execution logs (only included when debug=true)
+          items:
+            $ref: '#/components/schemas/LogEntry'
+
+    ExecutionStep:
+      type: object
+      required:
+        - action
+        - input
+        - timestamp
+      properties:
+        action:
+          type: string
+          description: The name of the tool that was executed
+          enum:
+            - calculator
+            - httpRequest
+            - wikipedia
+            - codeExecution
+        input:
+          type: object
+          description: The input parameters for the tool
+        output:
+          type: object
+          description: The output from the tool execution
+        error:
+          type: string
+          description: Error message if the tool execution failed
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp of when the step was executed
+
+    LogEntry:
+      type: object
+      required:
+        - timestamp
+        - level
+        - message
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the log entry
+        level:
+          type: string
+          description: Log level (e.g., INFO, ERROR)
+          enum:
+            - INFO
+            - ERROR
+            - DEBUG
+        message:
+          type: string
+          description: The log message
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong 
