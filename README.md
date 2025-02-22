@@ -51,8 +51,8 @@ The system consists of several components:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/go-tools-agent.git
-cd go-tools-agent
+git clone https://github.com/popand/go-tools-agent-langchain.git
+cd go-tools-agent-langchain
 ```
 
 2. Install dependencies:
